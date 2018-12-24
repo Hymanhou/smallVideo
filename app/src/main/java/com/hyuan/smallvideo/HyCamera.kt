@@ -1,38 +1,26 @@
 package com.hyuan.smallvideo
 
 import android.content.Context
-import android.graphics.SurfaceTexture
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
-import android.hardware.camera2.CameraMetadata
+import android.hardware.Camera
 import android.os.Build
-import android.view.TextureView
+import android.util.Size
 
 class HyCamera {
-    private lateinit var context:Context
-    private lateinit var mCameraId:String
+    private lateinit var mCamera:Camera;
 
-    constructor(context: Context) {
-        this.context = context
+    fun openCamera(width:Int, height:Int){
+        mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT)
+        var cameraParameters:Camera.Parameters  = mCamera.parameters
+        val pictureSizeList = cameraParameters.supportedPictureSizes
+        val previewSize = cameraParameters.supportedPreviewSizes
+
+        cameraParameters.setPictureSize()
+        mCamera.parameters = cameraParameters
     }
 
-    fun checkCameraLevel(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            
+    fun getBestSize(sizeList:List<Camera.Size>, targetWidth:Int):Camera.Size{
+        var bestSize:Camera.Size? = null
+        if (bestSize != null){
         }
-    }
-
-    fun prepare() {
-        val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-        for (cameraId in cameraManager.cameraIdList) {
-            val cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
-            if (cameraCharacteristics[CameraCharacteristics.LENS_FACING] == CameraMetadata.LENS_FACING_FRONT){
-                mCameraId = cameraId
-                val map = cameraCharacteristics[]
-                break
-            }
-        }
-
-
     }
 }
