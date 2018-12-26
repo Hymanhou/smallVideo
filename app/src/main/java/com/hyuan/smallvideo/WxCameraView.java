@@ -1,4 +1,36 @@
 package com.hyuan.smallvideo;
 
-public class WxCameraView {
+import android.content.Context;
+import android.opengl.GLSurfaceView;
+import android.util.AttributeSet;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+
+public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Renderer {
+
+    public WxCameraView(Context context){
+        this(context, null);
+    }
+
+    public WxCameraView(Context context, AttributeSet attributeSet) {
+        super(context, attributeSet);
+        setRenderer(this);
+        setRenderMode(RENDERMODE_WHEN_DIRTY);
+    }
+
+    @Override
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+
+    }
+
+    @Override
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
+
+    }
+
+    @Override
+    public void onDrawFrame(GL10 gl) {
+
+    }
 }
