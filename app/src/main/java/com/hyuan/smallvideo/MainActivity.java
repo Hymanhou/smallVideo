@@ -1,48 +1,56 @@
 package com.hyuan.smallvideo;
 
 import android.Manifest;
+import android.app.ActivityManager;
+import android.content.pm.ConfigurationInfo;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.SurfaceView;
 import android.view.TextureView;
+import android.view.Window;
+import android.view.WindowManager;
 
 public class MainActivity extends AppCompatActivity {
 
-    private WxCamera myCamera = null;
-    private TextureView textureView = null;
-    private int minWidth = 720;
+    private WxCameraView cameraView = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        PermissionUtils.askPermission(this,new String[]{Manifest.permission.CAMERA,Manifest
-                .permission.WRITE_EXTERNAL_STORAGE},10);
-//        setContentView(R.layout.activity_main);
-        textureView = new TextureView(this);
-        setContentView(textureView);
-        myCamera = new WxCamera();
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        if (!checkGLES30()) {
+            Log.e("cameraView", "es3.0 not supported.");
+            finish();
+        }
+        cameraView = new WxCameraView(this);
+        setContentView(cameraView);
+    }
 
-//        DisplayMetrics dm = new DisplayMetrics();
-//        getWindowManager().getDefaultDisplay().getMetrics(dm);
-//        screenHeight = dm.heightPixels;
-//        screenWidth = dm.widthPixels;
+    private boolean checkGLES30() {
+        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        ConfigurationInfo info = activityManager.getDeviceConfigurationInfo();
+        return info.reqGlEsVersion >= 0x30000;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        myCamera.closeCamera();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        myCamera.openCamera(minWidth);
-        myCamera.setSurfaceTexture(textureView.getSurfaceTexture());
-        myCamera.startPreview();
+        cameraView.onResume();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        cameraView.onPause();
+    }
 }
