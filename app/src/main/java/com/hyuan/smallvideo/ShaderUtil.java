@@ -19,7 +19,7 @@ public class ShaderUtil {
             }
             return stringBuilder.toString();
         } catch (IOException e) {
-            Log.e("ShaderUtil", e.getMessage());
+            Log.e("hyuan", e.getMessage());
             e.printStackTrace();
         }
         return stringBuilder.toString().replace("\r\n", "\n");
@@ -28,7 +28,7 @@ public class ShaderUtil {
     public static int compileSrc(int shaderType, String src) {
         int shader = GLES30.glCreateShader(shaderType);
         if (shader == 0) {
-            Log.e("ShaderUtil", "Shader calls should be within a GL " +
+            Log.e("hyuan", "Shader calls should be within a GL " +
                     "thread that is onSurfaceChanged(), onSurfaceCreated() or onDrawFrame()");
             return 0;
         }
@@ -38,8 +38,8 @@ public class ShaderUtil {
         int[] compile = new int[1];
         GLES30.glGetShaderiv(shader, GLES30.GL_COMPILE_STATUS, compile, 0);
         if (compile[0] == 0){
-            Log.e("ShaderUtil", "compile shader failed.");
-            Log.e("ShaderUtil", "message:" + GLES30.glGetShaderInfoLog(shader));
+            Log.e("hyuan", "compile shader failed.");
+            Log.e("hyuan", "message:" + GLES30.glGetShaderInfoLog(shader));
             return 0;
         }
         return shader;
@@ -53,7 +53,7 @@ public class ShaderUtil {
 
         int program = GLES30.glCreateProgram();
         if (program == 0) {
-            Log.e("ShaderUtil", "Shader calls should be within a GL " +
+            Log.e("hyuan", "Shader calls should be within a GL " +
                     "thread that is onSurfaceChanged(), onSurfaceCreated() or onDrawFrame()");
             return 0;
         }
@@ -65,8 +65,8 @@ public class ShaderUtil {
         int[] link = new int[1];
         GLES30.glGetProgramiv(program, GLES30.GL_LINK_STATUS, link, 0);
         if (link[0] == 0) {
-            Log.e("ShaderUtil", "link shader failed.");
-            Log.e("ShaderUtil", "message:" + GLES30.glGetProgramInfoLog(program));
+            Log.e("hyuan", "link shader failed.");
+            Log.e("hyuan", "message:" + GLES30.glGetProgramInfoLog(program));
             return 0;
         }
         return program;
@@ -78,7 +78,7 @@ public class ShaderUtil {
 
         int program = GLES30.glCreateProgram();
         if (program == 0) {
-            Log.e("ShaderUtil", "Shader calls should be within a GL " +
+            Log.e("hyuan", "Shader calls should be within a GL " +
                     "thread that is onSurfaceChanged(), onSurfaceCreated() or onDrawFrame()");
             return 0;
         }
@@ -90,8 +90,8 @@ public class ShaderUtil {
         int[] link = new int[1];
         GLES30.glGetProgramiv(program, GLES30.GL_LINK_STATUS, link, 0);
         if (link[0] == 0) {
-            Log.e("ShaderUtil", "link shader failed.");
-            Log.e("ShaderUtil", "message:" + GLES30.glGetProgramInfoLog(program));
+            Log.e("hyuan", "link shader failed.");
+            Log.e("hyuan", "message:" + GLES30.glGetProgramInfoLog(program));
             return 0;
         }
         return program;
