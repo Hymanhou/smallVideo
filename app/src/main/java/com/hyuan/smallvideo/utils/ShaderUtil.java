@@ -1,4 +1,4 @@
-package com.hyuan.smallvideo;
+package com.hyuan.smallvideo.utils;
 
 import android.content.res.Resources;
 import android.opengl.GLES30;
@@ -39,6 +39,7 @@ public class ShaderUtil {
         GLES30.glGetShaderiv(shader, GLES30.GL_COMPILE_STATUS, compile, 0);
         if (compile[0] == 0){
             Log.e("hyuan", "compile shader failed.");
+            String msg = GLES30.glGetShaderInfoLog(shader);
             Log.e("hyuan", "message:" + GLES30.glGetShaderInfoLog(shader));
             return 0;
         }
@@ -66,8 +67,9 @@ public class ShaderUtil {
         GLES30.glGetProgramiv(program, GLES30.GL_LINK_STATUS, link, 0);
         if (link[0] == 0) {
             Log.e("hyuan", "link shader failed.");
+            String msg = GLES30.glGetProgramInfoLog(program);
             Log.e("hyuan", "message:" + GLES30.glGetProgramInfoLog(program));
-            return 0;
+            return program;
         }
         return program;
     }

@@ -26,7 +26,7 @@ public class WxCamera {
         parameters.setPictureSize(mPictureSize.width, mPictureSize.height);
         parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
         mCamera.setParameters(parameters);
-        mCamera.setDisplayOrientation(90);
+        //mCamera.setDisplayOrientation(90);
         return 0;
     }
 

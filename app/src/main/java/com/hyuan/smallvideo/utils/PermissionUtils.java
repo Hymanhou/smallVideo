@@ -5,7 +5,7 @@
  * Created by Wuwang on 2016/11/14
  * Copyright © 2016年 深圳哎吖科技. All rights reserved.
  */
-package com.hyuan.smallvideo;
+package com.hyuan.smallvideo.utils;
 
 import android.Manifest;
 import android.app.Activity;

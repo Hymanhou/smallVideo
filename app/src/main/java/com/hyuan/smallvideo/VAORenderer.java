@@ -5,12 +5,11 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 
-import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.content.Context;
 import android.opengl.GLES30;
-import android.opengl.GLSurfaceView;
+import com.hyuan.smallvideo.utils.ShaderUtil;
 
 public class VAORenderer
 {

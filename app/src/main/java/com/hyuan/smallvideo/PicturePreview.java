@@ -7,6 +7,7 @@ import android.opengl.GLES20;
 import android.opengl.GLES30;
 import android.opengl.GLUtils;
 import android.util.Log;
+import com.hyuan.smallvideo.utils.ShaderUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
