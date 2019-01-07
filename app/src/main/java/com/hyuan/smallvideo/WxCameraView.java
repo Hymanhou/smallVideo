@@ -16,10 +16,13 @@ import java.util.Queue;
 
 public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Renderer {
     private WxCamera wxCamera;
-
-    private int program;
     private int textureId = -1;
-    private int samplerLoc;
+
+    private int program_basic;
+    private int samplerLoc_basic;
+
+    private int program_beauty;
+    private int samplerLoc_beauty;
 //    private float[] vertexesData = {
 //            -1.0f, 1.0f, 0.0f,      //left top
 //            0.0f, 1.0f,
@@ -52,6 +55,9 @@ public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Rendere
     private int texCoordLoc = 1;
     private Queue<Runnable> runOnDraw;
 
+    private int outputWidth;
+    private int outputHeight;
+
     public WxCameraView(Context context){
         this(context, null);
     }
@@ -79,24 +85,38 @@ public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Rendere
         wxCamera = new WxCamera();
     }
 
+    private void beautyLoad() {
+        program_beauty = ShaderUtil.createShaderProgram("gaussian_vertex.glsl","gaussian_fragment.glsl");
+        samplerLoc_beauty = GLES30.glGetUniformLocation(program_beauty, "inputImageTexture");
+        int widthOffsetLoc = GLES30.glGetUniformLocation(program_beauty, "texelWidthOffset");
+        int heightOffsetLoc = GLES30.glGetUniformLocation(program_beauty, "texelHeightOffset");
+        float wOffest = (float) 1.0/outputWidth;
+        float hOffest = (float) 1.0/outputHeight;
+        GLES30.glUniform1f(widthOffsetLoc, wOffest);
+        GLES30.glUniform1f(heightOffsetLoc, hOffest);
+    }
+
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         GLES30.glClearColor(1, 1, 1, 0.5f);
 
-        program = ShaderUtil.createShaderProgram("camera_vertex.glsl", "camera_fragment.glsl",
+        program_basic = ShaderUtil.createShaderProgram("camera_vertex.glsl", "camera_fragment.glsl",
                 getContext().getResources());
-        samplerLoc = GLES30.glGetUniformLocation(program, "s_texture");
-
+        samplerLoc_basic = GLES30.glGetUniformLocation(program_basic, "s_texture");
         wxCamera.openCamera(720);
         wxCamera.setPreviewCallback(new Camera.PreviewCallback() {
             @Override
             public void onPreviewFrame(byte[] data, Camera camera) {
                 int width = camera.getParameters().getPreviewSize().width;
                 int height = camera.getParameters().getPreviewSize().height;
+                if (outputHeight == 0 || outputWidth == 0) {
+                    outputWidth = width;
+                    outputHeight = height;
+                    beautyLoad();
+                }
                 onPreviewFrameAvailable(data, width, height);
             }
         });
-        //wxCamera.setSurfaceTexture(surfaceTexture);
         wxCamera.startPreview();
     }
 
@@ -142,45 +162,38 @@ public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Rendere
         GLES30.glViewport(0, 0, width, height);
     }
 
+    private void drawBeauty() {
+        GLES30.glUseProgram(program_beauty);
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureId);
+        GLES30.glUniform1i(samplerLoc_beauty, 0);
+
+    }
+
     @Override
     public void onDrawFrame(GL10 gl) {
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT);
-        GLES30.glUseProgram(program);
+        GLES30.glUseProgram(program_basic);
         int error = 0;
         synchronized (runOnDraw) {
             while (!runOnDraw.isEmpty()) {
                 runOnDraw.poll().run();
             }
         }
-        if ((error = GLES30.glGetError()) != GLES30.GL_NO_ERROR) {
-            Log.e("hyuan","glUniformMatrix4fv error:" + error);
-        }
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureId);
-        GLES30.glUniform1i(samplerLoc, 0);
+        GLES30.glUniform1i(samplerLoc_basic, 0);
 
         vertexBuff.position(0);
         GLES30.glEnableVertexAttribArray(vertexCoordLoc);
-        if ((error = GLES30.glGetError()) != GLES30.GL_NO_ERROR) {
-            Log.e("hyuan","glEnableVertexAttribArray error:" + error);
-        }
         GLES30.glVertexAttribPointer(vertexCoordLoc, 3, GLES30.GL_FLOAT, false, 5 * 4, vertexBuff);
-        if ((error = GLES30.glGetError()) != GLES30.GL_NO_ERROR) {
-            Log.e("hyuan","glVertexAttribPointer error:" + error);
-        }
 
         vertexBuff.position(3);
         GLES30.glEnableVertexAttribArray(texCoordLoc);
         GLES30.glVertexAttribPointer(texCoordLoc, 2, GLES30.GL_FLOAT, false, 5 * 4, vertexBuff);
-        if (GLES30.glGetError() != GLES30.GL_NO_ERROR) {
-            Log.e("hyuan","gl error:" + GLES30.glGetError());
-        }
+
 
         //GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, 3);
         GLES30.glDrawElements(GLES30.GL_TRIANGLES, indicesData.length, GLES30.GL_UNSIGNED_SHORT, indicesBuff);
-        if (GLES30.glGetError() != GLES30.GL_NO_ERROR) {
-            Log.e("hyuan","gl error:" + GLES30.glGetError());
-        }
 
         GLES30.glDisableVertexAttribArray(vertexCoordLoc);
         GLES30.glDisableVertexAttribArray(texCoordLoc);

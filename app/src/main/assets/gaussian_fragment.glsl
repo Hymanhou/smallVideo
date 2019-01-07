@@ -1,14 +1,24 @@
 #version 300 es
-#extension GL_OES_EGL_image_external_essl3 : require
 precision mediump float;
-in highp vec2 v_texCoord;
-in highp vec2 blurCoords[8];
-in highp float weightMatrix[8];
-uniform samplerExternalOES s_texture;
-out vec4 fragColor;
+uniform smapler2D inputImageTexture;
+const lowp int GAUSSIAN_SAMPLES = 9;
+in highp vec2 textureCoordinate;
+in highp vec2 blurCoordinates[GAUSSIAN_SAMPLES];
+out vec4 outFragColor;
 void main(){
-  fragColor = texture(s_texture, v_texCoord);
-  //fragColor = vec4(1.0, 0.0, 0.0, 1.0);
-  vec3 centralColor = texture(s_texture, v_texCoord).rgb;
+  lowp vec3 sum = vec3(0.0);
+  lowp vec4 fragColor = texture(inputImageTexture, textureCoordinate);
+
+  sum += texture(inputImageTexture, blurCoordinates[0]).rgb * 0.05;
+  sum += texture(inputImageTexture, blurCoordinates[1]).rgb * 0.09;
+  sum += texture(inputImageTexture, blurCoordinates[2]).rgb * 0.12;
+  sum += texture(inputImageTexture, blurCoordinates[3]).rgb * 0.15;
+  sum += texture(inputImageTexture, blurCoordinates[4]).rgb * 0.18;
+  sum += texture(inputImageTexture, blurCoordinates[5]).rgb * 0.15;
+  sum += texture(inputImageTexture, blurCoordinates[6]).rgb * 0.12;
+  sum += texture(inputImageTexture, blurCoordinates[7]).rgb * 0.09;
+  sum += texture(inputImageTexture, blurCoordinates[8]).rgb * 0.05;
+
+  outFragColor = vec4(sum, fragColor.a);
 }
 
