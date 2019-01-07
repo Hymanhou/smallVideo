@@ -10,12 +10,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
+import com.hyuan.smallvideo.utils.NativeTool;
 import com.hyuan.smallvideo.utils.PermissionUtils;
+
+import java.nio.IntBuffer;
 
 public class MainActivity extends AppCompatActivity {
 
     private WxCameraView cameraView = null;
-    private WxCamera wxCamera = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

@@ -1,5 +1,6 @@
 package com.hyuan.smallvideo;
 
+import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.view.Surface;
@@ -25,6 +26,8 @@ public class WxCamera {
         mPreviewSize = getBestSize(parameters.getSupportedPreviewSizes(), width, 1.778f);
         parameters.setPictureSize(mPictureSize.width, mPictureSize.height);
         parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+        parameters.setPictureFormat(ImageFormat.NV21);
+        parameters.setPreviewFormat(ImageFormat.NV21);
         mCamera.setParameters(parameters);
         //mCamera.setDisplayOrientation(90);
         return 0;
@@ -37,6 +40,10 @@ public class WxCamera {
             e.printStackTrace();
             return;
         }
+    }
+
+    public void setPreviewCallback(Camera.PreviewCallback callback) {
+        mCamera.setPreviewCallback(callback);
     }
 
     public void startPreview() {
