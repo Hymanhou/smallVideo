@@ -4,7 +4,6 @@ import android.content.Context;
 import android.hardware.Camera;
 import android.opengl.*;
 import android.util.AttributeSet;
-import android.util.Log;
 import com.hyuan.smallvideo.utils.NativeTool;
 import com.hyuan.smallvideo.utils.ShaderUtil;
 
@@ -19,10 +18,10 @@ public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Rendere
     private int textureId = -1;
 
     private int program_basic;
-    private int samplerLoc_basic;
+    private int samplerLoc;
+    private int distanceFactor;
 
     private int program_beauty;
-    private int samplerLoc_beauty;
 //    private float[] vertexesData = {
 //            -1.0f, 1.0f, 0.0f,      //left top
 //            0.0f, 1.0f,
@@ -85,24 +84,13 @@ public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Rendere
         wxCamera = new WxCamera();
     }
 
-    private void beautyLoad() {
-        program_beauty = ShaderUtil.createShaderProgram("gaussian_vertex.glsl","gaussian_fragment.glsl");
-        samplerLoc_beauty = GLES30.glGetUniformLocation(program_beauty, "inputImageTexture");
-        int widthOffsetLoc = GLES30.glGetUniformLocation(program_beauty, "texelWidthOffset");
-        int heightOffsetLoc = GLES30.glGetUniformLocation(program_beauty, "texelHeightOffset");
-        float wOffest = (float) 1.0/outputWidth;
-        float hOffest = (float) 1.0/outputHeight;
-        GLES30.glUniform1f(widthOffsetLoc, wOffest);
-        GLES30.glUniform1f(heightOffsetLoc, hOffest);
-    }
-
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         GLES30.glClearColor(1, 1, 1, 0.5f);
 
         program_basic = ShaderUtil.createShaderProgram("camera_vertex.glsl", "camera_fragment.glsl",
                 getContext().getResources());
-        samplerLoc_basic = GLES30.glGetUniformLocation(program_basic, "s_texture");
+        samplerLoc = GLES30.glGetUniformLocation(program_basic, "s_texture");
         wxCamera.openCamera(720);
         wxCamera.setPreviewCallback(new Camera.PreviewCallback() {
             @Override
@@ -112,7 +100,6 @@ public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Rendere
                 if (outputHeight == 0 || outputWidth == 0) {
                     outputWidth = width;
                     outputHeight = height;
-                    beautyLoad();
                 }
                 onPreviewFrameAvailable(data, width, height);
             }
@@ -163,16 +150,26 @@ public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Rendere
     }
 
     private void drawBeauty() {
+        if (program_beauty == 0) {
+            program_beauty = ShaderUtil.createShaderProgram("beauty_vertex.glsl","beauty_fragment.glsl",
+                    getResources());
+            samplerLoc = GLES30.glGetUniformLocation(program_beauty, "inputImageTexture");
+            distanceFactor = GLES30.glGetUniformLocation(program_beauty, "distanceNormaliztionFactor");
+            int stepOffsetLoc = GLES30.glGetUniformLocation(program_beauty, "stepOffset");
+            GLES30.glUniform2fv(stepOffsetLoc, 1, FloatBuffer.wrap(new float[]{1.0f/outputWidth, 1.0f/outputHeight}));
+            GLES30.glUniform1f(distanceFactor, 0.001f);
+        }
         GLES30.glUseProgram(program_beauty);
-        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureId);
-        GLES30.glUniform1i(samplerLoc_beauty, 0);
+    }
 
+    private void drawBasic() {
+        GLES30.glUseProgram(program_basic);
     }
 
     @Override
     public void onDrawFrame(GL10 gl) {
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT);
-        GLES30.glUseProgram(program_basic);
+        drawBeauty();
         int error = 0;
         synchronized (runOnDraw) {
             while (!runOnDraw.isEmpty()) {
@@ -181,7 +178,7 @@ public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Rendere
         }
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureId);
-        GLES30.glUniform1i(samplerLoc_basic, 0);
+        GLES30.glUniform1i(samplerLoc, 0);
 
         vertexBuff.position(0);
         GLES30.glEnableVertexAttribArray(vertexCoordLoc);
@@ -191,8 +188,6 @@ public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Rendere
         GLES30.glEnableVertexAttribArray(texCoordLoc);
         GLES30.glVertexAttribPointer(texCoordLoc, 2, GLES30.GL_FLOAT, false, 5 * 4, vertexBuff);
 
-
-        //GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, 3);
         GLES30.glDrawElements(GLES30.GL_TRIANGLES, indicesData.length, GLES30.GL_UNSIGNED_SHORT, indicesBuff);
 
         GLES30.glDisableVertexAttribArray(vertexCoordLoc);

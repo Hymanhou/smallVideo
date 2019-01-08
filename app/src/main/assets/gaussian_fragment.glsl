@@ -1,6 +1,6 @@
 #version 300 es
 precision mediump float;
-uniform smapler2D inputImageTexture;
+uniform sampler2D inputImageTexture;
 const lowp int GAUSSIAN_SAMPLES = 9;
 in highp vec2 textureCoordinate;
 in highp vec2 blurCoordinates[GAUSSIAN_SAMPLES];
