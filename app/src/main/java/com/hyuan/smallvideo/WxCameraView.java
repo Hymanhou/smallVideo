@@ -157,7 +157,7 @@ public class WxCameraView extends GLSurfaceView implements GLSurfaceView.Rendere
             distanceFactor = GLES30.glGetUniformLocation(program_beauty, "distanceNormaliztionFactor");
             int stepOffsetLoc = GLES30.glGetUniformLocation(program_beauty, "stepOffset");
             GLES30.glUniform2fv(stepOffsetLoc, 1, FloatBuffer.wrap(new float[]{1.0f/outputWidth, 1.0f/outputHeight}));
-            GLES30.glUniform1f(distanceFactor, 0.001f);
+            GLES30.glUniform1f(distanceFactor, 4f);
         }
         GLES30.glUseProgram(program_beauty);
     }
