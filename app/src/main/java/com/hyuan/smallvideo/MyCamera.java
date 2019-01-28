@@ -12,6 +12,11 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.util.Size;
+import android.view.Surface;
+import com.hyuan.smallvideo.utils.ImageUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 public class MyCamera {
@@ -24,8 +29,10 @@ public class MyCamera {
     private int viewWidth;
     private int viewHeight;
     private OnPreviewListener onPreviewListener;
+    private Activity activity;
 
     public MyCamera(Activity activity){
+        this.activity = activity;
         cameraManager = (CameraManager) activity.getSystemService(Context.CAMERA_SERVICE);
     }
 
@@ -34,6 +41,79 @@ public class MyCamera {
         viewHeight = height;
         setUpCamera();
     }
+
+    public void onPause() {
+        releaseCamera();
+    }
+
+    private void releaseCamera() {
+        imageReader.close();
+        cameraInstance.close();
+        captureSession.close();
+        imageReader = null;
+        cameraInstance = null;
+        captureSession = null;
+    }
+
+    public void switchCamera() {
+        if (cameraFacing == CameraCharacteristics.LENS_FACING_FRONT) {
+            cameraFacing = CameraCharacteristics.LENS_FACING_BACK;
+        } else {
+            cameraFacing = CameraCharacteristics.LENS_FACING_FRONT;
+        }
+        releaseCamera();
+        setUpCamera();
+    }
+
+    public int getCameraOrientation() {
+        int degrees = 0;
+        switch (activity.getWindowManager().getDefaultDisplay().getRotation()) {
+            case Surface.ROTATION_0:{
+                degrees = 0;
+                break;
+            }
+            case Surface.ROTATION_90:{
+                degrees = 90;
+                break;
+            }
+            case Surface.ROTATION_180:{
+                degrees = 180;
+                break;
+            }
+            case Surface.ROTATION_270:{
+                degrees = 270;
+                break;
+            }
+        }
+        String cameraId = chooseCamera();
+        if (cameraId == null){
+            return 0;
+        }
+        try {
+            CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
+            int orinetation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+            if (cameraFacing == CameraCharacteristics.LENS_FACING_FRONT) {
+                return orinetation + degrees % 360;
+            }
+            return orinetation - degrees % 360;
+        } catch (CameraAccessException e) {
+            Log.e(TAG, "access camera error.", e);
+        }
+        return 0;
+    }
+
+    public boolean hasMultipleCamera() {
+        try {
+            return cameraManager.getCameraIdList().length > 1;
+        } catch (CameraAccessException e) {
+            return false;
+        }
+    }
+
+    public void setOnPreviewListener(OnPreviewListener listener){
+        onPreviewListener = listener;
+    }
+
 
     @SuppressLint("MissingPermission")
     private void setUpCamera(){
@@ -69,11 +149,24 @@ public class MyCamera {
             @Override
             public void onImageAvailable(ImageReader reader) {
                 Image image = reader.acquireNextImage();
-                if (null != onPreviewListener) {
-                    onPreviewListener.onPreviewFrame(image.gene);
+                if (null != onPreviewListener && image != null) {
+                    onPreviewListener.onPreviewFrame(ImageUtil.generateNV21Data(image)
+                            , image.getWidth(), image.getHeight());
+                    image.close();
                 }
             }
         }, null);
+
+        try {
+            List<Surface> surfaceList = new ArrayList<>();
+            surfaceList.add(imageReader.getSurface());
+            cameraInstance.createCaptureSession(
+                    surfaceList,
+                    new CaptureStateCallback(),
+                    null);
+        } catch (CameraAccessException e) {
+            Log.e(TAG, "camera access error", e);
+        }
     }
 
     private Size chooseOptimalSize() {
@@ -84,54 +177,28 @@ public class MyCamera {
         if (null == cameraId) {
             return new Size(0, 0);
         }
-        Size bestSize = new Size(480, 640);
+        int bestWidth = 480;
+        int bestHeight = 640;
         try {
             StreamConfigurationMap  configurationMap = cameraManager
                     .getCameraCharacteristics(cameraId)
                     .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             Size[] outputSizeArray = configurationMap.getOutputSizes(ImageFormat.YUV_420_888);
 
-            int orientation = getCameraOrientation();
-            int maxPreviewWidth = viewWidth;
-            int maxPreviewHeight = viewHeight;
-            if (orientation == 90 || orientation == 270) {
-                maxPreviewWidth = viewHeight;
-                maxPreviewHeight = viewWidth;
-            }
-            long maxProduct = 0;
+            long minProduct = Integer.MAX_VALUE;
+
             for (Size size: outputSizeArray) {
-                if (size.getWidth() < maxPreviewWidth / 2 && size.getHeight() < maxPreviewHeight / 2) {
-                    if (size.getHeight() * size.getWidth() >  maxProduct) {
-                        maxProduct = size.getHeight() * size.getWidth();
-                        bestSize = new Size(size.getWidth(), size.getHeight());
-                    }
+                long product = Math.abs((viewHeight - size.getHeight()) * (viewWidth - size.getWidth()));
+                if (product < minProduct) {
+                    minProduct = product;
+                    bestHeight = size.getHeight();
+                    bestWidth = size.getWidth();
                 }
             }
-            return bestSize;
         } catch (CameraAccessException e) {
             Log.e(TAG, "access camera error", e);
         }
-        return bestSize;
-    }
-
-    public void onPause() {
-
-    }
-
-    public void switchCamera() {
-
-    }
-
-    public int getCameraOrientation() {
-        return 0;
-    }
-
-    public boolean hasMultipleCamera() {
-        return false;
-    }
-
-    public void setOnPreviewListener(OnPreviewListener listener){
-
+        return new Size(bestWidth, bestHeight);
     }
 
     private class CameraDeviceCallback extends CameraDevice.StateCallback{

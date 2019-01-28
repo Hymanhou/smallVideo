@@ -3,11 +3,13 @@ package com.hyuan.smallvideo;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
+import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
 import com.hyuan.smallvideo.filter.AffectFilter;
+import com.hyuan.smallvideo.utils.Rotation;
 
 //为相机提供预览的view
 //CameraPreviewView只是一个容器布局，
@@ -33,14 +35,17 @@ public class CameraPreviewView extends FrameLayout{
         this.context = context;
         final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         final ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
-        if (configurationInfo.reqGlEsVersion >= 0x20000){
+        if (configurationInfo.reqGlEsVersion >= 0x30000){
             filter = new AffectFilter();
             imageRender = new ImageRender(filter);
-            surfaceView = new GLSurfaceView(context, attrs);
+            surfaceView = new ImageGLSurfaceView(context, attrs);
+            surfaceView.setEGLContextClientVersion(3);
             surfaceView.setRenderer(imageRender);
+            surfaceView.getHolder().setFormat(PixelFormat.RGBA_8888);
+            surfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
             addView(surfaceView);
         } else {
-            throw new IllegalStateException("OpenGL ES2.0 is not supported!");
+            throw new IllegalStateException("OpenGL ES3.0 is not supported!");
         }
     }
 
@@ -88,6 +93,22 @@ public class CameraPreviewView extends FrameLayout{
 
     public void updatePreviewFrame(byte[] data, int width, int height) {
         imageRender.updatePreviewFrame(data, width, height);
+        surfaceView.requestRender();
+    }
+
+    public void setRotation(Rotation rotation) {
+        imageRender.setRotation(rotation);
+        surfaceView.requestRender();
+    }
+
+    private class ImageGLSurfaceView extends GLSurfaceView {
+        public ImageGLSurfaceView(Context context) {
+            super(context);
+        }
+
+        public ImageGLSurfaceView(Context context, AttributeSet attrs) {
+            super(context, attrs);
+        }
     }
 
 }
