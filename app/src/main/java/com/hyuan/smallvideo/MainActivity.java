@@ -10,10 +10,9 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
 import android.view.View;
-import com.hyuan.smallvideo.filter.AffectFilterGroup;
-import com.hyuan.smallvideo.filter.BeautyFilter;
-import com.hyuan.smallvideo.filter.GrayFilter;
-import com.hyuan.smallvideo.filter.LookupFilter;
+import android.widget.Button;
+import android.widget.SeekBar;
+import com.hyuan.smallvideo.filter.*;
 import com.hyuan.smallvideo.utils.PermissionUtils;
 import com.hyuan.smallvideo.utils.Rotation;
 
@@ -24,8 +23,16 @@ public class MainActivity extends AppCompatActivity {
 
     private MyCamera myCamera;
     private CameraPreviewView cameraPreviewView;
-
-    private MyGLSurfaceView glSurfaceView;
+    private SeekBar seekBar;
+    private Button button;
+    private boolean filterChoosed = false;
+    private LookupFilter lookupFilter;
+    private BeautyFilter beautyFilter;
+    private BilateralBlurFilter blurFilter;
+    private FastBlurFilter fastBlurFilter;
+    private ErodeFilter erodeFilter;
+    private AffectFilter affectFilter;
+    private GrayFilter grayFilter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -33,18 +40,63 @@ public class MainActivity extends AppCompatActivity {
         PermissionUtils.askPermission(this, new String[]{Manifest.permission.CAMERA,
         Manifest.permission.WRITE_EXTERNAL_STORAGE}, 10);
         setContentView(R.layout.activity_main);
+        seekBar = findViewById(R.id.seekBar);
 
-        AffectFilterGroup filterGroup = new AffectFilterGroup();
-
-        LookupFilter lookupFilter = new LookupFilter(getResources());
+        lookupFilter = new LookupFilter(getResources());
+        lookupFilter.setIntensity(0.0f);
         lookupFilter.setMaskImage("purity.png", getResources());
-        lookupFilter.setIntensity(0.2f);
-        BeautyFilter beautyFilter = new BeautyFilter(this.getResources());
+        beautyFilter = new BeautyFilter(this.getResources());
+        blurFilter = new BilateralBlurFilter(getResources());
+        fastBlurFilter = new FastBlurFilter(getResources());
+        erodeFilter = new ErodeFilter(getResources());
+        affectFilter = new AffectFilter();
+        grayFilter = new GrayFilter();
 
-        filterGroup.addFilter(lookupFilter);
-        filterGroup.addFilter(beautyFilter);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                lookupFilter.setIntensity(progress/100f);
+                beautyFilter.setLevel(progress/20+1);//
+                blurFilter.setDistanceNormalizationFactor(20 * progress/100);
+//                int factor = (int)(15.0  * progress / 100.0f);
+//                blurFilter.setDistanceNormalizationFactor(factor);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
         cameraPreviewView = findViewById(R.id.camera_preview);
+
+        button = findViewById(R.id.button_choose_filter);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (filterChoosed) {
+                    cameraPreviewView.setFilter(affectFilter);
+                    filterChoosed = false;
+                } else {
+                    cameraPreviewView.setFilter(blurFilter);
+                    filterChoosed = true;
+                }
+
+            }
+        });
+
+
+        cameraPreviewView.setFilter(affectFilter);
+
+//        cameraPreviewView.setFilter(lookupFilter);
+//        cameraPreviewView.setFilter(beautyFilter);
+        //cameraPreviewView.setFilter(fastBlurFilter);
+        //cameraPreviewView.setFilter(erodeFilter);
         myCamera = new MyCamera(this);
         myCamera.setOnPreviewListener(new OnPreviewListener() {
             @Override
@@ -53,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         cameraPreviewView.setRotation(getRotaion(myCamera.getCameraOrientation()));
-        cameraPreviewView.setFilter(filterGroup);
+
     }
 
     private Rotation getRotaion(int orientation) {

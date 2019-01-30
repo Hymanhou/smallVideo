@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES30;
 import android.opengl.GLUtils;
+import android.util.Log;
 
 import java.io.IOException;
 
@@ -36,7 +37,6 @@ public class BeautyFilter extends AffectFilter {
         glHiternum=GLES30.glGetUniformLocation(promgramId,"iternum");
         glWidth=GLES30.glGetUniformLocation(promgramId,"mWidth");
         glHeight=GLES30.glGetUniformLocation(promgramId,"mHeight");
-        setLevel(5);
     }
 
     public void setLevel(int level) {
@@ -66,7 +66,7 @@ public class BeautyFilter extends AffectFilter {
     }
 
     private void a(int a,float b,float c){
-        this.iternum=a;
+        this.iternum=0;
         this.aaCoef=b;
         this.mixCoef=c;
     }

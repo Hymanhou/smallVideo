@@ -96,7 +96,6 @@ public class ImageRender implements GLSurfaceView.Renderer {
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
         runAll(runOnDraw);
         filter.onDraw(glTextureId, glCubeBuffer, glTextureBuffer);
-
     }
 
     //主要是进行纹理加载
@@ -149,6 +148,7 @@ public class ImageRender implements GLSurfaceView.Renderer {
                 }
                 ImageRender.this.filter.ifNeedInit();
                 GLES30.glUseProgram(ImageRender.this.filter.getProgram());
+                ImageRender.this.filter.onOutputSizeChanged(outputWidth, outputHeight);
             }
         });
     }

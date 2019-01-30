@@ -10,7 +10,8 @@ in highp vec2 blurCoord1s[14];
 const float distanceNormalizationFactor = 4.0;    //标准化距离因子常量
 const mat3 saturateMatrix = mat3(1.1102,-0.0598,-0.061,-0.0774,1.0826,-0.1186,-0.0228,-0.0228,1.1772);
 out vec4 fragColor;
-void main() {
+void main( ) {
+
     vec3 centralColor;
     float central;
     float gaussianWeightTotal;
@@ -18,9 +19,10 @@ void main() {
     float sampleColor;
     float distanceFromCentralColor;
     float gaussianWeight;
+
     //通过绿色通道来磨皮
     //取得当前点颜色的绿色通道
-    central = texture(inputImageTexture, textureCoordinate ).g;
+    central = texture(inputImageTexture, textureCoordinate).g;
     //高斯权重
     gaussianWeightTotal = 0.2;
     //绿色通道色彩记数
@@ -29,7 +31,7 @@ void main() {
     // 计算各个采样点处的高斯权重，包括密闭性和相似性
     for (int i = 0; i < 6; i++) {
         //采样点的绿色通道
-        sampleColor = texture( inputImageTexture, blurCoord1s[i] ).g;
+        sampleColor = texture(inputImageTexture, blurCoord1s[i]).g;
         //采样点和计算点的颜色差
         distanceFromCentralColor = min( abs( central - sampleColor ) * distanceNormalizationFactor, 1.0 );
         //高斯权重
@@ -56,7 +58,7 @@ void main() {
     sum = sum / gaussianWeightTotal;
 
     //取得当前点的颜色
-    centralColor = fragColor.xyz;//texture( inputImageTexture, textureCoordinate ).rgb;
+    centralColor = texture( inputImageTexture, textureCoordinate ).rgb;
     //采样值
     sampleColor = centralColor.g - sum + 0.5;
     //迭代计算

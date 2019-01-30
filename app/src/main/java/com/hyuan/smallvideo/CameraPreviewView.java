@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
 import com.hyuan.smallvideo.filter.AffectFilter;
+import com.hyuan.smallvideo.filter.AffectFilterGroup;
 import com.hyuan.smallvideo.utils.Rotation;
 
 //为相机提供预览的view
@@ -83,6 +84,7 @@ public class CameraPreviewView extends FrameLayout{
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         }
     }
+
 
     public void setFilter(AffectFilter filter) {
         this.filter = filter;
